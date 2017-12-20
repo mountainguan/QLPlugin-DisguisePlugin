@@ -11,9 +11,10 @@
             "email": "mountainguan@gmail.com"
         }
     ],
+    "minimum-stability":"dev",
     "autoload": {
 	"prs-4": {
-            "mountainguan\\": ""
+            "QL\\Ext\\": ""
 	}
     }
 }
