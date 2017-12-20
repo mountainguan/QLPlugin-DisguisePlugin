@@ -1,0 +1,19 @@
+{
+    "name": "mountainguan/ql-plugin-disguise",
+    "description": "Make a disguise headers for get/post request.",
+    "require": {
+        "jaeger/querylist": "^4.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "mountainguan",
+            "email": "mountainguan@gmail.com"
+        }
+    ],
+    "autoload": {
+	"prs-4": {
+            "mountainguan\\": ""
+	}
+    }
+}

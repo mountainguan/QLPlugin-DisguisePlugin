@@ -1,31 +1,51 @@
-<p align="center">
-  <img width="150" src="https://github.com/jae-jae/QueryList/raw/master/logo.png" alt="QueryList">
-  <br>
-  <br>
-</p>
+# QueryList V4 Plugin - SimpleForm
+make form submission easier
+# Installation
+```
+composer require liesauer/ql-plugin-simpleform
+```
+# Bind
+* QueryList `simpleForm` ($formUrl, $formSelector = '', $formParams = [], $postParams = [], ...$args)
+    * `formUrl` where to get the form
+    * `formSelector` only required if there are two or more form elements
+    * `formParams` use for get the form, read `QueryList::get` or `QueryList::post`, default method is get
+    * `postParams` same as `formParams` but use for form submission, default method is post
+    * `args` no used
+# Usage
+```php
+use liesauer\QLPlugin\SimpleForm;
+use QL\QueryList;
 
-# QueryList Community
-There are QueryList plugins and QueryList-based projects from open-source contributors，Welcome to [Pull request](CONTRIBUTING.md) to submit your own！[Contributing Guide](CONTRIBUTING.md)
+require_once __DIR__ . '/vendor/autoload.php';
 
-[中文版本](README-ZH.md)
+// cookie needed for this example
+$cookie = new \GuzzleHttp\Cookie\CookieJar();
 
-## Plugins
-### Tool plugin
-- [jae-jae/QueryList-AbsoluteUrl](https://github.com/jae-jae/QueryList-AbsoluteUrl) : Converting relative urls to absolute.
-- [jae-jae/QueryList-CurlMulti](https://github.com/jae-jae/QueryList-CurlMulti) : Curl multi threading.
-- [liesauer/QLPlugin-SimpleForm](https://github.com/liesauer/QLPlugin-SimpleForm) : Make form submission easier.
-- [jae-jae/QueryList-PhantomJS](https://github.com/jae-jae/QueryList-PhantomJS): Use PhantomJS to crawl Javascript dynamically rendered page.
+$ql = QueryList::getInstance();
 
-### Rule plugin
-- [jae-jae/QueryList-Rule-Google](https://github.com/jae-jae/QueryList-Rule-Google) : Google searcher.
-- [jae-jae/QueryList-Rule-Baidu](https://github.com/jae-jae/QueryList-Rule-Baidu) : Baidu searcher.
-- [liesauer/QLPlugin-BingSearcher](https://github.com/liesauer/QLPlugin-BingSearcher) : Bing Searcher.
+// use this plugin
+$ql->use(SimpleForm::class);
 
-##  Projects
-Products of based on QueryList.
+$username = $ql->simpleForm('https://github.com/login', '', [
+    'options' => [
+        'verify'  => false,
+        'cookies' => $cookie,
+    ],
+], [
+    'params'  => [
+        'login'    => 'username',
+        'password' => 'password',
+    ],
+    'options' => [
+        'verify'  => false,
+        'cookies' => $cookie,
+    ],
+])->find('.header-nav-current-user>.css-truncate-target')->text();
 
-- None...
-
-## Contributor list
-[![Jaeger](https://avatars2.githubusercontent.com/u/5620429?v=4&s=50)](https://github.com/jae-jae)
-[![LiesAuer](https://avatars2.githubusercontent.com/u/8676741?v=4&s=50)](https://github.com/liesauer)
+if (!empty($username)) {
+    echo "welcome back, {$username}!\n";
+} else {
+    $error = $ql->find('.flash-error>.container')->text();
+    echo "{$error}\n";
+}
+```
