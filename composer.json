@@ -13,7 +13,7 @@
     ],
     "minimum-stability":"dev",
     "autoload": {
-	"prs-4": {
+	"psr-4": {
             "QL\\Ext\\": ""
 	}
     }
