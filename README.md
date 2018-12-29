@@ -117,3 +117,24 @@ Array (
         ) 
 )
 ```
+
+- Supported original get/post methods with disguise.And add support to postJson() method with GHttp.
+
+```
+$ql = QueryList::getInstance();
+$ql->use(DisguisePlugin::class);
+$ql->disguiseIp()->disguiseUa()->get('http://httpbin.org/get',[
+		'param1' => 'testvalue',
+		'params2' => 'somevalue'
+	],[
+ 	//设置超时时间，单位：秒
+		'timeout' => 30,
+		'headers' => [
+		 'Referer' => 'https://querylist.cc/',
+		'Accept'     => 'application/json',
+		'X-Foo'      => ['Bar', 'Baz'],
+		 'Cookie'    => 'abc=111;xxx=222'
+	]
+]);
+echo $ql->getHtml();die;
+```

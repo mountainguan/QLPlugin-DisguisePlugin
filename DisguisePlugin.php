@@ -1,16 +1,25 @@
 <?php
 /**
  * User: mountainguan <mountainguan@gmail.com>
- * Date: 2017/12/20
+ * Date: 2018/12/29
  * Make a disguise header for get/post request.
  */
 namespace QL\Ext;
 use QL\Contracts\PluginContract;
 use QL\QueryList;
+// 因为postJson未被收入所以自行实现，而引入的包
+use GuzzleHttp\Cookie\CookieJar;
+use Jaeger\GHttp;
 
 class DisguisePlugin implements PluginContract
 {
+    protected $ql;
     protected static $args = [];
+
+    public function __construct(QueryList $ql)
+    {
+        $this->ql = $ql;
+    }
 
     //注册
     public static function install(QueryList $queryList, ...$opt)
@@ -19,19 +28,19 @@ class DisguisePlugin implements PluginContract
         $disguise_ua = $opt[1] ?? 'disguiseUa';
         
         $queryList->bind($disguise_ip,function ($otherArgs = [] ,$ip = ''){
-            return DisguisePlugin::setIp($this,$otherArgs,$ip);
+            return (new DisguisePlugin($this))->setIp($otherArgs,$ip);
         });
 
         $queryList->bind($disguise_ua,function ($otherArgs = [] ,$ua = ''){
-            return DisguisePlugin::setUserAgent($this,$otherArgs,$ua);
+            return (new DisguisePlugin($this))->setUserAgent($otherArgs,$ua);
         });
     }
 
     //设置混淆IP
-    public static function setIp($ql ,$otherArgs = [] ,$ip = '')
+    public function setIp($otherArgs = [] ,$ip = '')
     {
         if (empty($ip)) {
-            $ip = self::getRandIp();
+            $ip = $this->getRandIp();
         }
         $header = $otherArgs['headers'] ?? [];
         $header_add = [
@@ -47,12 +56,12 @@ class DisguisePlugin implements PluginContract
         }
         self::$args['headers'] = array_merge($header,$header_add);
 
-        $ql->disguise_headers = self::$args;
-        return $ql;
+        $this->ql->disguise_headers = self::$args;
+        return $this;
     }
 
     //设置混淆UA
-    public static function setUserAgent($ql ,$otherArgs = [] ,$ua = '')
+    public function setUserAgent($otherArgs = [] ,$ua = '')
     {
         if (empty($ua)) {
             $ua = self::getRandUa();
@@ -67,14 +76,59 @@ class DisguisePlugin implements PluginContract
         }
         self::$args['headers'] = array_merge($header,$header_add);
 
-        $ql->disguise_headers = self::$args;
-        return $ql;
+        $this->ql->disguise_headers = self::$args;
+        return $this;
+    }
+
+    // 封装QueryList原来的get方法
+    public function get($url, $args = null, $otherArgs = [])
+    {
+        if (isset($otherArgs['headers']))
+            $headers = array_merge(self::$args['headers'],$otherArgs['headers']);
+        else
+            $headers = self::$args['headers'];
+        
+        $otherArgs['headers'] = $headers;
+        $this->ql->get($url, $args, $otherArgs);
+        return $this->ql;
+    }
+
+    // 封装QueryList原来的post方法
+    public function post($url, $args = null, $otherArgs = [])
+    {
+        if (isset($otherArgs['headers']))
+            $headers = array_merge(self::$args['headers'],$otherArgs['headers']);
+        else
+            $headers = self::$args['headers'];
+        
+        $otherArgs['headers'] = $headers;
+        $this->ql->post($url, $args, $otherArgs);
+        return $this->ql;
+    }
+
+    // 新增postJson方法
+    public function postJson($url,$args = null,$otherArgs = [])
+    {
+        if (isset($otherArgs['headers']))
+            $headers = array_merge($ql->disguise_headers['headers'],$otherArgs['headers']);
+        else
+            $headers = $ql->disguise_headers['headers'];
+
+        $otherArgs['headers'] = $headers;
+
+        $otherArgs = array_merge([
+            'cookies' => self::getCookieJar(),
+            'verify' => false
+        ],$otherArgs);
+        $html = GHttp::postJson($url,$args,$otherArgs);
+        $this->ql->setHtml($html);
+        return $this->ql;
     }
 
     /*
      * 随机ip函数(中国ip段)
      */
-    private static function getRandIp(){
+    private function getRandIp(){
         $arr_1 = array("218","218","66","66","218","218","60","60","202","204","66","66","66","59","61","60","222","221","66","59","60","60","66","218","218","62","63","64","66","66","122","211");
         $randarr= mt_rand(0,count($arr_1)-1);
         $ip1id = $arr_1[$randarr];
@@ -87,7 +141,7 @@ class DisguisePlugin implements PluginContract
     /*
      * 随机UA
      */
-    private static function getRandUa() {
+    private function getRandUa() {
         $agent_arr = [
             //PC端的UserAgent  
             "safari 5.1 – MAC"=>"Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11",  
